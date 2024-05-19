@@ -16,11 +16,11 @@ const Part = ({ name, exercises }) => {
   )
 }
 
-const Content = ({course}) => { 
+const Content = ({ courses }) => { 
   // console.log(course)
   return (
     <div>
-      {course.map(c => <Part key={c.id} name={c.name} exercises={c.exercises} />)}
+      {courses.map(course => <Part key={course.id} name={course.name} exercises={course.exercises} />)}
     </div>
   )
 }
@@ -45,7 +45,7 @@ const Course = (props) => {
   return (
     <div>
       <Header course={course} />
-      <Content course={course.parts} />
+      <Content courses={course.parts} />
       <Total parts={course.parts} />
     </div>
   )
