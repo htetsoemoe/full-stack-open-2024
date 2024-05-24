@@ -39,12 +39,47 @@ const PersonForm = ({ onSubmit, newName, newNumber, handleNewName, handleNewNumb
 
 // Notification
 const Notification = ({ message }) => {
+  /** Inline CSS Styles */
+  const addPersonSuccessStyles = {
+    display: 'block',
+    color: 'green',
+    background: 'lightgray',
+    fontSize: '22px',
+    border: '5px solid green',
+    borderRadius: '5px',
+    padding: '10px',
+    marginBottom: '10px'
+  }
+
+  const updatePersonErrorStyles = {
+    display: 'block',
+    color: 'red',
+    background: 'lightgray',
+    fontSize: '22px',
+    border: '5px solid red',
+    borderRadius: '5px',
+    padding: '10px',
+    marginBottom: '10px'
+  }
+
+  let style
+  
   if (message === null) {
     return null
   }
 
+  /** 
+   * If message is null return null, but message had a value we need to check the message type
+   * the following code block is not to moved above 'Is message null?' code block
+   */
+  if (message.toLowerCase().includes('success')) {
+    style = addPersonSuccessStyles
+  } else if (message.toLowerCase().includes('information')) {
+    style = updatePersonErrorStyles
+  }
+
   return (
-    <div className='error'>
+    <div className='error' style={style}>
       {message}
     </div>
   )
