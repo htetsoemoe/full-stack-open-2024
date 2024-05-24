@@ -1,8 +1,35 @@
 .error {
     color: black;
-    background: rgb(243, 246, 247);
+    background: rgb(255, 255, 255);
     font-size: 22px;
     border: 0px solid black;
     padding: 10px;
     margin-bottom: 10px;
+}
+
+.addPersonForm {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.spacing {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    color: white;
+    background-color: rgb(21, 79, 81);
+    width: 70px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.userName {
+    font-size: 18px;
+    font-weight: bold;
+    margin-right: 15px;
 }

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import personService from './services/persons'
 
-/** Components */
+/** ------ Components ------- */
+
 // Heading
 const Heading = ({ text }) => (
   <h1>{text}</h1>
@@ -19,7 +20,7 @@ const Part = ({ text, value, handleNewChange }) => {
 // Button
 const Button = ({ type, text, handleNewChange }) => {
   return (
-    <button type={type} onClick={handleNewChange}>{text}</button>
+    <button className='btn' type={type} onClick={handleNewChange}>{text}</button>
   )
 }
 
@@ -27,8 +28,10 @@ const Button = ({ type, text, handleNewChange }) => {
 const PersonForm = ({ onSubmit, newName, newNumber, handleNewName, handleNewNumber }) => {
   return (
     <form onSubmit={onSubmit}>
-      <Part text={'name'} value={newName} handleNewChange={handleNewName} />
-      <Part text={'number'} value={newNumber} handleNewChange={handleNewNumber} />
+      <div className='addPersonForm'>
+        <Part text={'name'} value={newName} handleNewChange={handleNewName} />
+        <Part text={'number'} value={newNumber} handleNewChange={handleNewNumber} />
+      </div>
       <Button text='add' type='submit' />
     </form>
   )
@@ -47,11 +50,32 @@ const Notification = ({ message }) => {
   )
 }
 
+// Filter
+const Filter = ({ text, value, handleFilterName }) => {
+  return (
+    <div>
+      {text} <input value={value} onChange={handleFilterName} />
+    </div>
+  )
+}
+
+// People
+const People = ({ personAfterFilter }) => {
+  return (
+    <div>
+      {personAfterFilter}
+    </div>
+  )
+}
+
+/** ------ Components ------- */
+
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [changeMessage, setChangeMessage] = useState('')
+  const [filterName, setFilterName] = useState('')
 
   useEffect(() => {
     personService
@@ -62,30 +86,57 @@ const App = () => {
   }, [])
 
   const handleNameOnChange = (event) => {
-    console.log(event.target.value)
+    // console.log(event.target.value)
     setNewName(event.target.value)
   }
 
   const handleNumberOnChange = (event) => {
-    console.log(event.target.value)
+    // console.log(event.target.value)
     setNewNumber(event.target.value)
+  }
+
+  const handleFilterName = (event) => {
+    // console.log(event.target.value)
+    setFilterName(event.target.value)
   }
 
   const handleAddPerson = (event) => {
     event.preventDefault()
 
+    // json-server auto generate id number
     const newPerson = {
-      id: persons.length + 1,
       name: newName,
       number: newNumber,
     }
 
     // check new person name is already existed in persons
-    const checkNewName = persons.find(person => person.name.toLowerCase() === newPerson.name.toLowerCase())
+    const checkExistedPersonName = persons.find(person => person.name.toLowerCase() === newPerson.name.toLowerCase())
 
-    if (checkNewName && checkNewName.number === newPerson.number) {
+    // same username but different number condition
+    const changedPerson = {...checkExistedPersonName, number: newNumber}
+
+    if (checkExistedPersonName && checkExistedPersonName.number === newPerson.number) {
       window.alert(`${newName} is already added to phone book`)
-    } else {
+    } 
+    else if (checkExistedPersonName && checkExistedPersonName.number !== newPerson.number) {
+      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+        personService
+          .updatePerson(checkExistedPersonName.id, changedPerson)
+          .then(updatedPerson => {
+            setPersons(persons.map(person => person.id !== checkExistedPersonName.id? person : updatedPerson))
+            setNewName('')
+            setNewNumber('')
+            setChangeMessage(`Number of ${newName} is changed.`)
+            setTimeout(() => { // After 3 seconds later set null value to changeMessage.
+              setChangeMessage(null)
+            }, 3000)
+          })
+          .catch(error => {
+            setChangeMessage(`Information of ${newName} has already been removed from server`)
+          })
+      }
+    } 
+    else {
       // Save new person to server
       personService
         .create(newPerson)
@@ -104,15 +155,45 @@ const App = () => {
     }
   }
 
+  // delete person with id
+  const handleDeletePerson = (id) => {
+    const foundPerson = persons.find(person => person.id === id)
+    // console.log(foundPerson)
+
+    if (window.confirm(`Are you sure want to delete User: ${foundPerson.name} ?`)) {
+      personService.deletePerson(id)
+        .then(response => {
+          setPersons(persons.filter(person => person.id !== id))
+        })
+    }
+  }
+
+  // Filter with user's input or show all persons
+  const filteredPerson = persons.map(person => person.name.toLowerCase().includes(filterName.toLowerCase()))
+    ? persons.filter(person => person.name.toLowerCase().includes(filterName.toLowerCase()))
+    : persons
+
+  const FilteredPerson = ({ name, number, id }) => {
+    // console.log(id)
+    return (
+      <div className='spacing'>
+        <div><span className='userName'>{name}</span> {number}</div> 
+        <Button text={'delete'} type='submit' handleNewChange={() => handleDeletePerson(id)} />
+      </div>
+    )
+  }
+
+  const personAfterFilter = filteredPerson.map(person => (
+    <FilteredPerson key={person.id} name={person.name} number={person.number} id={person.id} />
+  ))
+
   return (
     <div>
       <Heading text={'Phonebook'} />
-      {/* Notification Component */}
       <Notification message={changeMessage} />
-      {/* Filter Component */}
+      <Filter text={'filter shown with'} value={filterName} handleFilterName={handleFilterName} />
 
       <Heading text={'add a new'} />
-      {/* PersonForm Component */}
       <PersonForm
         onSubmit={handleAddPerson}
         newName={newName}
@@ -122,9 +203,7 @@ const App = () => {
       />
 
       <Heading text={'Numbers'} />
-      {persons.map((person) => (
-        <p key={person.id}>{person.name} {person.number}</p>
-      ))}
+      <People personAfterFilter={personAfterFilter} />
     </div>
   )
 }
