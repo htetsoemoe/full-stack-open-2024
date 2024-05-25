@@ -44,7 +44,7 @@ const App = () => {
               style={cssStyles}
             >
               <div>
-                {`Country: ${country.altSpellings}, `}
+                {`Country: ${country.name.common}, `}
               </div>
               <div>
                 {`City: ${country.capital}, `}
