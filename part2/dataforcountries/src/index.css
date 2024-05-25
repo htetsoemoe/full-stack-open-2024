@@ -1,0 +1,30 @@
+/* styles for ShowAllCountries Component */
+.show-all-countries-container {
+    margin-top: 20px;
+    padding: 20px;
+}
+
+.country-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 10px 20px 10px 1px;
+}
+
+.show-all-countries-btn {
+    background-color: rgb(66, 16, 16);
+    color: white;
+    padding-left: 15px;
+    padding-right: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* **************************************************** */
+
+/* styles for ShowOneCountries Component */
+.show-one-country-container {
+    margin: 20px 20px 20px 0px;
+    padding: 20px;
+    background-color: cyan;   
+    border-radius: 10px;
+}

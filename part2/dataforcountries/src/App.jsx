@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
+import UserSelectedCountry from './components/UserSelectedCountry'
 
 const App = () => {
-  const [country, setCountry] = useState('')
+  const [selectedCountry, setSelectedCountry] = useState('')
   const [countries, setCountries] = useState([])
 
   useEffect(() => {
@@ -14,48 +15,16 @@ const App = () => {
   console.log(countries)
 
   const handleCountryChange = (event) => {
-    setCountry(event.target.value)
-  }
-
-  const cssStyles = {
-    display: 'flex',
-    gap: '25px',
-    alignItems: 'center',
-    padding: '10px',
-    margin: '20px',
-    fontWeight: 'bold',
-    fontSize: '20px'
-  }
-
-  const imgStyles = {
-    width: '70px'
+    setSelectedCountry(event.target.value)
   }
 
   return (
     <div>
       <form>
-        Find Countries <input value={country} onChange={handleCountryChange} />
+        Find Countries <input value={selectedCountry} onChange={handleCountryChange} />
       </form>
       <div>
-        {countries.map((country, index) => {
-          return (
-            <div
-              key={index}
-              style={cssStyles}
-            >
-              <div>
-                {`Country: ${country.name.common}, `}
-              </div>
-              <div>
-                {`City: ${country.capital}, `}
-              </div>
-              <div>
-                {`Continent: ${country.continents}, `}
-              </div>
-              <img style={imgStyles} src={country.flags.png} />
-            </div>
-          )
-        })}
+        <UserSelectedCountry key={countries.capital} countries={countries} selectedCountry={selectedCountry} />
       </div>
     </div>
   )
