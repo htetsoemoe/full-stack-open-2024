@@ -12,7 +12,7 @@ const App = () => {
       .then(response => setCountries(response.data))
   }, [])
 
-  console.log(countries)
+  // console.log(countries)
 
   const handleCountryChange = (event) => {
     setSelectedCountry(event.target.value)
