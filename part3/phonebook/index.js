@@ -1,9 +1,26 @@
 require('dotenv').config()
-const cors = require('cors')
 const express = require('express')
+const cors = require('cors')
+const morgan = require('morgan')
 
 const app = express()
 app.use(express.json())
+
+// using morgan - HTTP request logger middleware for node.js
+morgan.format("reqFormat", (tokens, req, res) => {
+    return [
+        tokens.method(req, res),
+        tokens.url(req, res),
+        tokens.status(req, res),
+        tokens.res(req, res, 'content-length'),
+        '-',
+        tokens['response-time'](req, res),
+        'ms',
+        req.method === 'POST' ? JSON.stringify(req.body) : '',
+    ].join(" ")
+})
+
+app.use(morgan("reqFormat"))
 app.use(cors())
 
 const PORT = process.env.PORT || 3001
@@ -32,7 +49,7 @@ let persons = [
 ]
 
 app.get('/', (req, res) => {
-    res.status(200).json({msg: "Hello World form Phone Book"})
+    res.status(200).json({ msg: "Hello World form Phone Book" })
 })
 
 app.get('/api/persons', (req, res) => {
@@ -69,12 +86,12 @@ const generateId = () => {
 app.post('/api/persons', (req, res) => {
     const body = req.body
 
-    if(persons.find(person => person.name === body.name)) {
-        return res.status(400).json({error: "name must be unique."})
+    if (persons.find(person => person.name === body.name)) {
+        return res.status(400).json({ error: "name must be unique." })
     } else if (!body.name) {
-        return res.status(400).json({error: "name is missing."})
+        return res.status(400).json({ error: "name is missing." })
     } else if (!body.number) {
-        return res.status(400).json({error: "number is missing."})
+        return res.status(400).json({ error: "number is missing." })
     }
 
     const person = {
@@ -93,6 +110,13 @@ app.delete('/api/persons/:id', (req, res) => {
 
     res.status(204).end()
 })
+
+// Unknown Endpoint Error Handler Middleware
+const unknownEndpoint = (req, res) => {
+    res.status(404).send({ error: "unknown endpoint" })
+}
+
+app.use(unknownEndpoint)
 
 app.listen(PORT, () => {
     console.log(`Server is running on port: ${PORT}`)
