@@ -22,7 +22,7 @@ morgan.format("reqFormat", (tokens, req, res) => {
 
 app.use(morgan("reqFormat"))
 app.use(cors())
-
+app.use(express.static("dist"))
 const PORT = process.env.PORT || 3001
 
 let persons = [
