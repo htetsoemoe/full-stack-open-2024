@@ -59,9 +59,9 @@ app.get('/api/persons', (req, res) => {
     })
 })
 
-app.get('/info', (req, res) => {
+app.get('/info', async (req, res) => {
     const date = new Date()
-    const count = persons.length
+    const count = await Person.countDocuments()
     res.send(`
         <p>Phonebook has info for ${count} people</p> 
         <p>${date}</p>
@@ -69,42 +69,62 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(person => person.id === id)
-
-    if (person) {
-        res.json(person)
-    } else {
-        res.status(404).end()
-    }
+    Person.findById(req.params.id)
+        .then((person) => {
+            if (person) {
+                res.status(200).json(person)
+            } else {
+                res.status(404).json({ message: "User not found!" })
+            }
+        })
+        .catch((error) => console.log(error)) // Before using default error handling
 })
 
-const generateId = () => {
-    const maxId = persons.length > 0
-        ? Math.max(...persons.map(person => person.id))
-        : 0
-    return maxId + 1
-}
+// const generateId = () => {
+//     const maxId = persons.length > 0
+//         ? Math.max(...persons.map(person => person.id))
+//         : 0
+//     return maxId + 1
+// }
 
 app.post('/api/persons', (req, res) => {
     const body = req.body
 
-    if (persons.find(person => person.name === body.name)) {
-        return res.status(400).json({ error: "name must be unique." })
-    } else if (!body.name) {
-        return res.status(400).json({ error: "name is missing." })
-    } else if (!body.number) {
-        return res.status(400).json({ error: "number is missing." })
+    if (body.name === undefined) {
+        return res.status(400).json({ message: "missing name" })
     }
 
-    const person = {
-        id: generateId(),
+    if (body.number === undefined) {
+        return res.status(400).json({ message: "missing number" })
+    }
+
+    const person = new Person({
         name: body.name,
-        number: body.number
-    }
+        number: body.number,
+    })
 
-    persons = persons.concat(person) //Combines two or more arrays. This method returns a new array without modifying any existing arrays
-    res.status(201).json(person)
+    person.save()
+        .then((savedPerson) => {
+            res.status(201).json(savedPerson)
+        })
+        .catch((error) => console.log(error)) // Before using default error handling
+
+    // if (persons.find(person => person.name === body.name)) {
+    //     return res.status(400).json({ error: "name must be unique." })
+    // } else if (!body.name) {
+    //     return res.status(400).json({ error: "name is missing." })
+    // } else if (!body.number) {
+    //     return res.status(400).json({ error: "number is missing." })
+    // }
+
+    // const person = {
+    //     id: generateId(),
+    //     name: body.name,
+    //     number: body.number
+    // }
+
+    // persons = persons.concat(person) //Combines two or more arrays. This method returns a new array without modifying any existing arrays
+    // res.status(201).json(person)   
 })
 
 app.delete('/api/persons/:id', (req, res) => {
