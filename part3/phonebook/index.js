@@ -6,6 +6,9 @@ const Person = require('./models/person')
 
 const app = express()
 app.use(express.json())
+app.use(express.static("dist"))
+app.use(cors())
+const PORT = process.env.PORT || 3001
 
 // using morgan - HTTP request logger middleware for node.js
 morgan.format("reqFormat", (tokens, req, res) => {
@@ -22,32 +25,6 @@ morgan.format("reqFormat", (tokens, req, res) => {
 })
 
 app.use(morgan("reqFormat"))
-app.use(cors())
-app.use(express.static("dist"))
-const PORT = process.env.PORT || 3001
-
-let persons = [
-    {
-        "id": 1,
-        "name": "Arto Hellas",
-        "number": "040-123456"
-    },
-    {
-        "id": 2,
-        "name": "Ada Lovelace",
-        "number": "39-44-5323523"
-    },
-    {
-        "id": 3,
-        "name": "Dan Abramov",
-        "number": "12-43-234345"
-    },
-    {
-        "id": 4,
-        "name": "Mary Poppendieck",
-        "number": "39-23-6423122"
-    }
-]
 
 app.get('/', (req, res) => {
     res.status(200).json({ msg: "Hello World form Phone Book" })
@@ -68,7 +45,7 @@ app.get('/info', async (req, res) => {
     `)
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
     Person.findById(req.params.id)
         .then((person) => {
             if (person) {
@@ -77,7 +54,7 @@ app.get('/api/persons/:id', (req, res) => {
                 res.status(404).json({ message: "User not found!" })
             }
         })
-        .catch((error) => console.log(error)) // Before using default error handling
+        .catch((error) => next(error)) // using default error handling
 })
 
 // const generateId = () => {
@@ -87,7 +64,7 @@ app.get('/api/persons/:id', (req, res) => {
 //     return maxId + 1
 // }
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const body = req.body
 
     if (body.name === undefined) {
@@ -107,7 +84,7 @@ app.post('/api/persons', (req, res) => {
         .then((savedPerson) => {
             res.status(201).json(savedPerson)
         })
-        .catch((error) => console.log(error)) // Before using default error handling
+        .catch((error) => next(error)) // using default error handling
 
     // if (persons.find(person => person.name === body.name)) {
     //     return res.status(400).json({ error: "name must be unique." })
@@ -127,11 +104,31 @@ app.post('/api/persons', (req, res) => {
     // res.status(201).json(person)   
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    persons = persons.filter(person => person.id !== id)
+app.delete('/api/persons/:id', (req, res, next) => {
+    Person.findByIdAndDelete(req.params.id)
+        .then(() => {
+            res.status(204).end()
+        })
+        .catch((error) => next(error))
 
-    res.status(204).end()
+    // const id = Number(req.params.id)
+    // persons = persons.filter(person => person.id !== id)
+    // res.status(204).end()
+})
+
+app.put('/api/persons/:id', (req, res, next) => {
+    const body = req.body
+    console.log(req.params.id)
+    const person = {
+        name: body.name,
+        number: body.number,
+    }
+
+    Person.findByIdAndUpdate(req.params.id, person, { new: true })
+        .then((updatedPerson) => {
+            res.status(200).json(updatedPerson)
+        })
+        .catch((error) => next(error))
 })
 
 // Unknown Endpoint Error Handler Middleware
@@ -139,7 +136,24 @@ const unknownEndpoint = (req, res) => {
     res.status(404).send({ error: "unknown endpoint" })
 }
 
+// Default Error Handler Middleware (must be the last middleware of server)
+const errorHandler = (error, req, res, next) => {
+    console.log("error handler", error.name, error.message)
+
+    if (error.name === 'CastError') {
+        return res.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message })
+    }
+
+    next(error)
+}
+
+// this middleware must place before default error handler middleware
 app.use(unknownEndpoint)
+
+// Default Error Handler Middleware (must be the last middleware of server)
+app.use(errorHandler)
 
 app.listen(PORT, () => {
     console.log(`Server is running on port: ${PORT}`)
