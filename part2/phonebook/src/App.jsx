@@ -63,7 +63,7 @@ const Notification = ({ message }) => {
   }
 
   let style
-  
+
   if (message === null) {
     return null
   }
@@ -75,6 +75,8 @@ const Notification = ({ message }) => {
   if (message.toLowerCase().includes('success')) {
     style = addPersonSuccessStyles
   } else if (message.toLowerCase().includes('information')) {
+    style = updatePersonErrorStyles
+  } else if (message.toLowerCase().includes('person validation failed')) {
     style = updatePersonErrorStyles
   }
 
@@ -148,17 +150,17 @@ const App = () => {
     const checkExistedPersonName = persons.find(person => person.name.toLowerCase() === newPerson.name.toLowerCase())
 
     // same username but different number condition
-    const changedPerson = {...checkExistedPersonName, number: newNumber}
+    const changedPerson = { ...checkExistedPersonName, number: newNumber }
 
     if (checkExistedPersonName && checkExistedPersonName.number === newPerson.number) {
       window.alert(`${newName} is already added to phone book`)
-    } 
+    }
     else if (checkExistedPersonName && checkExistedPersonName.number !== newPerson.number) {
       if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
         personService
           .updatePerson(checkExistedPersonName.id, changedPerson)
           .then(updatedPerson => {
-            setPersons(persons.map(person => person.id !== checkExistedPersonName.id? person : updatedPerson))
+            setPersons(persons.map(person => person.id !== checkExistedPersonName.id ? person : updatedPerson))
             setNewName('')
             setNewNumber('')
             setChangeMessage(`Number of ${newName} is changed.`)
@@ -170,7 +172,7 @@ const App = () => {
             setChangeMessage(`Information of ${newName} has already been removed from server`)
           })
       }
-    } 
+    }
     else {
       // Save new person to server
       personService
@@ -184,8 +186,14 @@ const App = () => {
             setChangeMessage(null)
           }, 3000)
         })
-        .catch(error => {
-          setChangeMessage(`Error: ${error.response.data.error}`)
+        .catch(error => { // Mongoose Person Schema Validation Error
+          console.log(error.response.data.error)
+          setNewName('')
+          setNewNumber('')
+          setChangeMessage(error.response.data.error)
+          setTimeout(() => { // After 5 seconds later set null value to changeMessage.
+            setChangeMessage(null)
+          }, 5000)
         })
     }
   }
@@ -212,7 +220,7 @@ const App = () => {
     // console.log(id)
     return (
       <div className='spacing'>
-        <div><span className='userName'>{name}</span> {number}</div> 
+        <div><span className='userName'>{name}</span> {number}</div>
         <Button text={'delete'} type='submit' handleNewChange={() => handleDeletePerson(id)} />
       </div>
     )
