@@ -1,16 +1,8 @@
 const { test, describe } = require("node:test")
 const assert = require("node:assert")
-const { favoriteBlog } = require("../utils/list_helper")
+const { mostBlogs } = require("../utils/list_helper")
 
-describe("favorite blog", () => {
-    const listWithOneBlog = [
-        {
-            title: 'Canonical string reduction',
-            author: 'Edsger W. Dijkstra',
-            likes: 12,
-        },
-    ];
-
+describe("most blogs", () => {
     const blogs = [
         {
             _id: '5a422a851b54a676234d17f7',
@@ -63,17 +55,12 @@ describe("favorite blog", () => {
     ];
 
     test("empty blog array", () => {
-        const result = favoriteBlog([])
+        const result = mostBlogs([])
         assert.equal(result, null)
     })
 
-    test("when list has only one blog, equals the likes of that", () => {
-        const result = favoriteBlog(listWithOneBlog)
-        assert.deepStrictEqual(result, listWithOneBlog[0])
-    })
-
-    test("of many is the one with the most likes", () => {
-        const result = favoriteBlog(blogs)
-        assert.deepStrictEqual(result, blogs[2]) // check for two objects contain the same properties and values.
+    test("author with most blogs", () => {
+        const result = mostBlogs(blogs)
+        assert.deepStrictEqual(result, { author: 'Robert C. Martin', blogs: 3 })
     })
 })
