@@ -47,8 +47,30 @@ describe("when there is initially one user in db", () => {
             .get('/api/users')
             .expect(200)
             .expect('Content-Type', /application\/json/)
-        
+
         // console.log(result._body)
+    })
+
+    test("creation of a user succeeds", async () => {
+        const usersAtStart = await test_helper.usersInDb()
+
+        const newUser = {
+            username: 'mluukkai',
+            name: 'Matti Luukkainen',
+            password: 'salainen',
+        };
+
+        await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await test_helper.usersInDb()
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1)
+
+        const usernames = usersAtEnd.map((user) => user.username)
+        assert(usernames.includes(newUser.username))
     })
 })
 
