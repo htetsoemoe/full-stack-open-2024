@@ -72,8 +72,70 @@ describe("when there is initially one user in db", () => {
         const usernames = usersAtEnd.map((user) => user.username)
         assert(usernames.includes(newUser.username))
     })
+
+    test("creation of a user fails due to password length < 3", async () => {
+        const usersAtStart = await test_helper.usersInDb()
+
+        const newUser = {
+            username: "john",
+            name: "John Doe",
+            password: "12",
+        }
+
+        await api
+            .post("/api/users")
+            .send(newUser)
+            .expect(400)
+            .expect("Content-Type", /application\/json/)
+            .expect((response) => {
+                assert(response.body.error, "Password must be at least 3 characters.")
+            })
+
+        const usersAtEnd = await test_helper.usersInDb()
+        assert(usersAtStart, usersAtEnd)
+    })
+
+    test("creation of a user fails due to username length < 3", async () => {
+        const usersAtStart = await test_helper.usersInDb()
+
+        const newUser = {
+            username: "jo",
+            name: "John Doe",
+            password: "12345",
+        }
+
+        await api
+            .post("/api/users")
+            .send(newUser)
+            .expect(400)
+            .expect("Content-Type", /application\/json/)
+            .expect((response) => {
+                assert(response.body.error, "Username needs to be at least 3 characters long!")
+            })
+
+        const usersAtEnd = await test_helper.usersInDb()
+        assert(usersAtStart, usersAtEnd)
+    })
+
+    test("return user object with blogs property", async () => {
+        const newUser = {
+            username: "john",
+            name: "John Doe",
+            password: "johndoe",
+        }
+
+        await api
+            .post("/api/users")
+            .send(newUser)
+            .expect(201)
+            .expect("Content-Type", /application\/json/)
+            .expect((response) => {
+                assert(response.body.blogs, [])
+            })
+    })
 })
 
 after(async () => {
+    await User.deleteMany({})
     await mongoose.connection.close()
 })

@@ -5,12 +5,15 @@ const User = require("../models/user")
 userRouter.post("/", async (req, res) => {
     const { username, name, password } = req.body
 
+    if (username.length < 3) {
+        return res.status(400).json({ error: "Username needs to be at least 3 characters long!" })
+    }
+
     if (password.length < 3) {
         return res.status(400).json({ error: "Password must be at least 3 characters." })
     }
 
     const existedUser = await User.findOne({ username })
-
     if (existedUser) {
         return res.status(400).json({ error: 'expected `username` to be unique' })
     }
