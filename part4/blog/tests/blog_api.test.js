@@ -5,10 +5,15 @@ const app = require("../app")
 const assert = require("node:assert")
 const testHelper = require("./test_helper")
 const Blog = require("../models/blog")
+const User = require("../models/user")
+const { title } = require("node:process")
 
 const api = supertest(app)
 
 describe("When test starts initialize the DB with data", () => {
+    // for authentication
+    let token
+
     beforeEach(async () => {
         await Blog.deleteMany({})
         console.log(`\n------- Database Cleared! -------\n`)
@@ -17,6 +22,10 @@ describe("When test starts initialize the DB with data", () => {
         const blogObjects = testHelper.initialBlogs.map((blog) => new Blog(blog))
         const blogPromiseArray = blogObjects.map((blog) => blog.save())
         await Promise.all(blogPromiseArray)
+
+        await User.deleteMany({})
+
+        token = await testHelper.createUserAndGenerateToken()
 
         console.log(`\n------- Database Created! -------\n`)
     })
@@ -51,6 +60,7 @@ describe("When test starts initialize the DB with data", () => {
 
             await api
                 .post("/api/blogs")
+                .set("Authorization", `Bearer ${token}`)
                 .send(newBlog)
                 .expect(201)
                 .expect("Content-Type", /application\/json/)
@@ -69,6 +79,7 @@ describe("When test starts initialize the DB with data", () => {
 
             await api
                 .post("/api/blogs")
+                .set("Authorization", `Bearer ${token}`)
                 .send(newBlog)
                 .expect(201)
                 .expect("Content-Type", /application\/json/)
@@ -94,17 +105,36 @@ describe("When test starts initialize the DB with data", () => {
 
             await api
                 .post("/api/blogs")
+                .set("Authorization", `Bearer ${token}`)
                 .send(newBlog)
                 .expect(400)
 
             await api
                 .post("/api/blogs")
+                .set("Authorization", `Bearer ${token}`)
                 .send(newBlog1)
                 .expect(400)
 
             // Must be same initialBlogsInDb and after post request is done
             const totalBlogsOfAfterNewPost = await testHelper.blogsInDb()
             assert.strictEqual(totalBlogsOfAfterNewPost.length, testHelper.initialBlogs.length)
+        })
+
+        test("Must be fail there is no token when adding a new blog", async () => {
+            const newBlog = {
+                title: 'String3',
+                author: 'String3',
+                url: 'String3',
+                likes: 7,
+            }
+
+            const result = await api
+                .post("/api/blogs")
+                .send(newBlog)
+                .expect(401)
+                .expect("Content-Type", /application\/json/)
+
+            assert.strictEqual(result.body.error, 'token invalid')
         })
     })
 
@@ -120,6 +150,7 @@ describe("When test starts initialize the DB with data", () => {
 
             const addedNewPost = await api
                 .post("/api/blogs")
+                .set("Authorization", `Bearer ${token}`)
                 .send(newBlog)
                 .expect(201)
                 .expect("Content-Type", /application\/json/)
@@ -130,6 +161,7 @@ describe("When test starts initialize the DB with data", () => {
 
             await api
                 .delete(`/api/blogs/${addedNewPost._body.id}`)
+                .set("Authorization", `Bearer ${token}`)
                 .expect(204)
 
             const totalBlogsOfAfterDeletingBlog = await testHelper.blogsInDb()
