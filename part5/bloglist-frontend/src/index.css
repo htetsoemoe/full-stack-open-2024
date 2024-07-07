@@ -1,0 +1,25 @@
+/* Styles for logged in user info  */
+
+.loggedInUserInfo {
+    display: flex;
+    gap: 20px;
+}
+
+.loggedInUserInfo .loggedInUsername {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.loggedInUserInfo .logoutBtn {
+    width: 100px;
+    background-color: red;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.loggedInUserInfo .logoutBtn:hover {
+    background-color: rgb(245, 117, 117);
+}
+
+/* End of styles for logged in user info  */

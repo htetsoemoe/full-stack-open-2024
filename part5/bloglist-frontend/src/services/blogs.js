@@ -1,9 +1,17 @@
 import axios from 'axios'
 const baseUrl = '/api/blogs'
 
-const getAll = () => {
-  const request = axios.get(baseUrl)
-  return request.then(response => response.data)
+// To store logged-in user's token
+let token = null
+
+const setToken = (newToken) => {
+  token = `Bearer ${newToken}`
 }
 
-export default { getAll }
+const getAll = async () => {
+  const request = axios.get(baseUrl)
+  const response = await request
+  return response.data
+}
+
+export default { setToken, getAll }
